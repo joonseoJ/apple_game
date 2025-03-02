@@ -9,6 +9,8 @@ from monte_carlo_tree_search import MCTS
 from game import AppleGame
 from model import AppleGameModel
 
+import time
+
 class Trainer:
 
     def __init__(self, game: AppleGame, model: AppleGameModel, args):
@@ -46,20 +48,41 @@ class Trainer:
                 return ret
 
     def learn(self):
+        total_start_time = time.time() 
         for i in range(1, self.args['numIters'] + 1):
-
+            iter_start_time = time.time()
             print("{}/{}".format(i, self.args['numIters']))
 
             train_examples = []
 
+            eps_start_time = time.time()
             for eps in range(self.args['numEps']):
                 iteration_train_examples = self.exceute_episode()
                 train_examples.extend(iteration_train_examples)
+                if eps % (self.args['numEps'] // 10) == 0:
+                    elapsed_eps_time = time.time() - eps_start_time
+                    avg_eps_time = elapsed_eps_time / (eps + 1)
+                    remaining_eps_time = avg_eps_time * (self.args['numEps'] - eps)
+                    print(f"  → Processing: {eps}/{self.args['numEps']} Episode finished "
+                        f"(Average {avg_eps_time:.2f}s/Episode, Estimated time left: {remaining_eps_time:.2f}s)")
+
 
             shuffle(train_examples)
+            
+            train_start_time = time.time()
             self.train(train_examples)
+            train_duration = time.time() - train_start_time
+            print(f"  → Model training completed (Consumed: {train_duration:.2f}s)")
+            
             filename = self.args['checkpoint_path']
             self.save_checkpoint(folder=".", filename=filename)
+
+            iter_duration = time.time() - iter_start_time
+            avg_iter_time = (time.time() - total_start_time) / i
+            remaining_time = avg_iter_time * (self.args['numIters'] - i)
+            
+            print(f"Iteration {i}/{self.args['numIters']} Completed "
+                f"(Consumed time: {iter_duration:.2f}s, Estimated time left: {remaining_time:.2f}s)\n")
 
     def train(self, examples):
         optimizer = optim.Adam(self.model.parameters(), lr=5e-4)
