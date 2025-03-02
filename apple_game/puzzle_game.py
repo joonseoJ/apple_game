@@ -102,6 +102,7 @@ class PuzzleGame:
             
             for event in pygame.event.get() + self.events:
                 if event.type == pygame.QUIT:
+                    self.running = False
                     pygame.quit()
                     return
                 elif event.type == pygame.VIDEORESIZE:

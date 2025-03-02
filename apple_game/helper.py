@@ -20,29 +20,26 @@ class Helper:
         
     def run(self):
         while self.puzzle_game.running:
-            if self.update_range():
+            if self.check_valid_rectangle():
                 self.generate_event()
                         
 
-    def update_range(self):
-        index = self.x_start + self.COLS*self.y_start
-        
-        for i in range(self.GRID_NUM):
-            y,x = divmod((index+i)%self.GRID_NUM, self.COLS)
-            if self.puzzle_game.grid[y][x] == 0:
-                continue
-            
-            if self.check_right(x, y):
-                return True
-            
-            if self.check_up(x, y):
-                return True
-            
-            if self.check_left(x, y):
-                return True
-            
-            if self.check_down(x, y):
-                return True
+    def check_valid_rectangle(self):
+        for j in range(1, self.COLS):
+            index = self.x_start + self.COLS*self.y_start
+            for i in range(self.GRID_NUM):
+                y,x = divmod((index+i)%self.GRID_NUM, self.COLS)                
+                if self.check_right(x, y, j):
+                    return True
+                
+                if self.check_up(x, y, j):
+                    return True
+                
+                if self.check_left(x, y, j):
+                    return True
+                
+                if self.check_down(x, y, j):
+                    return True
         return False
             
     def generate_event(self):
@@ -76,77 +73,64 @@ class Helper:
         time.sleep(0.1)
 
     
-    def check_right(self, x, y):
-        value_sum = self.puzzle_game.grid[y][x]
-        for i in range(1,self.COLS):
+    def check_right(self, x, y, length):
+        if y + length >= self.ROWS: return False
+        value_sum = 0
+        for i in range(self.COLS):
             if x+i >= self.COLS: return False
-            value_sum = value_sum + self.puzzle_game.grid[y][x+i]
+            for j in range(length):
+                value_sum = value_sum + self.puzzle_game.grid[y+j][x+i]
             if value_sum == 10:
-                self.update_range_right(x,y,i)
+                self.update_range(x,y,i,length-1)
                 return True
             elif value_sum < 10: continue
             else: return False
     
     
-    def check_up(self, x, y):
-        value_sum = self.puzzle_game.grid[y][x]
-        for i in range(1,self.ROWS):
+    def check_up(self, x, y, length):
+        if x + length >= self.COLS: return False
+        value_sum = 0
+        for i in range(self.ROWS):
             if y-i < 0: return False
-            value_sum = value_sum + self.puzzle_game.grid[y-i][x]
+            for j in range(length):
+                value_sum = value_sum + self.puzzle_game.grid[y-i][x+j]
             if value_sum == 10:
-                self.update_range_up(x,y,i)
+                self.update_range(x,y,length-1,-i)
                 return True
             elif value_sum < 10: continue
             else: return False
 
     
-    def check_left(self, x, y):
-        value_sum = self.puzzle_game.grid[y][x]
-        for i in range(1,self.COLS):
+    def check_left(self, x, y, length):
+        if y - length < 0: return False
+        value_sum = 0
+        for i in range(self.COLS):
             if x-i < 0: return False
-            value_sum = value_sum + self.puzzle_game.grid[y][x-i]
+            for j in range(length):
+                value_sum = value_sum + self.puzzle_game.grid[y-j][x-i]
             if value_sum == 10:
-                self.update_range_left(x,y,i)
+                self.update_range(x,y,-i, -(length-1))
                 return True
             elif value_sum < 10: continue
             else: return False
     
     
-    def check_down(self, x, y):
-        value_sum = self.puzzle_game.grid[y][x]
-        for i in range(1,self.COLS):
+    def check_down(self, x, y, length):
+        if x - length < 0: return False
+        value_sum = 0
+        for i in range(self.ROWS):
             if y+i >= self.ROWS: return False
-            value_sum = value_sum + self.puzzle_game.grid[y+i][x]
+            for j in range(length):
+                value_sum = value_sum + self.puzzle_game.grid[y+i][x-j]
             if value_sum == 10:
-                self.update_range_down(x,y,i)
+                self.update_range(x,y,-(length-1), i)
                 return True
             elif value_sum < 10: continue
             else: return False
 
 
-    def update_range_right(self, x, y, i):
+    def update_range(self, x, y, dx, dy):
         self.x_start = x
-        self.x_end = x+i
+        self.x_end = x+dx
         self.y_start = y
-        self.y_end = y
-
-
-    def update_range_up(self, x, y, i):
-        self.x_start = x
-        self.x_end = x
-        self.y_start = y
-        self.y_end = y-i
-
-
-    def update_range_left(self, x, y, i):
-        self.x_start = x
-        self.x_end = x-i
-        self.y_start = y
-        self.y_end = y
-
-
-    def update_range_down(self, x, y, i):
-        self.x_start = x
-        self.x_end = x
-        self.y_start = y
-        self.y_end = y+i
+        self.y_end = y+dy 
