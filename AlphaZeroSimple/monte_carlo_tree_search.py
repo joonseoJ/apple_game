@@ -4,6 +4,8 @@ import numpy as np
 from model import AppleGameModel
 from game import AppleGame
 
+from time_analysis import timer, TimerContext
+
 def ucb_score(parent, child):
     """
     The score for an action that would transition between the parent and child.
@@ -62,9 +64,13 @@ class Node:
         We expand a node and keep track of the prior policy probability given by neural network
         """
         self.state = state
-        for a, prob in enumerate(action_probs):
-            if prob != 0:
-                self.children[a] = Node(prior=prob)
+        nonzero_indices = np.nonzero(action_probs)[0] 
+        nonzero_probs = action_probs[nonzero_indices] 
+        self.children = {a: Node(prior=prob)
+                         for a, prob in zip(nonzero_indices, nonzero_probs)}
+        # for a, prob in enumerate(action_probs):
+        #     if prob != 0:
+        #         self.children[a] = Node(prior=prob)
 
     def __repr__(self):
         """
@@ -81,6 +87,7 @@ class MCTS:
         self.model = model
         self.args = args
 
+    # @timer
     def run(self, model: AppleGameModel, state: np.ndarray):
 
         root = Node(0)

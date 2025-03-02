@@ -33,7 +33,7 @@ class AppleGameModel(nn.Module):
         value_logit = self.value_head(x)
         value_logit = torch.sigmoid(value_logit) * self.size
 
-        return F.softmax(action_logits, dim=1), torch.tanh(value_logit)
+        return F.softmax(action_logits, dim=1), value_logit
 
     def predict(self, board):
         board = torch.FloatTensor(board.astype(np.float32)).to(self.device)
